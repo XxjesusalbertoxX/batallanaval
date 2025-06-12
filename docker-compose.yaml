@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: batallanavl_db
+    networks:
+      - batallanaval
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: db-batallanaval
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  batallanaval:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+    name: postgres_data
