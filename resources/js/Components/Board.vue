@@ -2,14 +2,14 @@
   <div class="board-container" :class="{ 'mini-board': isMini, 'large-board': large }">
     <!-- Coordenadas de columnas (letras) -->
     <div class="coord-row">
-      <div class="coord-cell"></div>
+      <div class="coord-cell corner-cell"></div>
       <div class="coord-cell" v-for="col in size" :key="`col-${col}`">
         {{ String.fromCharCode(64 + col) }}
       </div>
     </div>
     
     <!-- Filas del tablero con coordenadas -->
-    <div v-for="(row, rowIndex) in board" :key="`row-${rowIndex}`" class="flex">
+    <div v-for="(row, rowIndex) in board" :key="`row-${rowIndex}`" class="board-row">
       <!-- Coordenadas de filas (números) -->
       <div class="coord-cell">{{ rowIndex + 1 }}</div>
       
@@ -43,7 +43,9 @@ export default {
     },
     board: {
       type: Array,
-      required: true
+      required: true,
+      // Now board should be an array of arrays containing cells with numeric states (0-3)
+      // 0: empty, 1: ship, 2: miss, 3: hit
     },
     isMini: {
       type: Boolean,
@@ -77,6 +79,12 @@ export default {
   background-color: rgba(0, 20, 40, 0.5);
   padding: 4px;
   border: 2px solid rgba(0, 180, 255, 0.4);
+  box-sizing: border-box;
+  line-height: 0; /* Prevent extra spacing between rows */
+}
+
+.board-container * {
+  box-sizing: border-box;
 }
 
 .mini-board {
@@ -96,6 +104,17 @@ export default {
   display: flex;
   color: #00AAFF;
   font-size: 10px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.board-row {
+  display: flex;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  line-height: 0; /* Prevent extra space within rows */
 }
 
 .coord-cell {
@@ -106,10 +125,35 @@ export default {
   justify-content: center;
   color: #00AAFF;
   font-size: 10px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.corner-cell {
+  border: none;
+}
+
+.large-board .coord-row,
+.large-board .board-row {
+  height: 30px;
 }
 
 .large-board .coord-cell {
   font-size: 12px;
+  width: 30px;
+  height: 30px;
+}
+
+.mini-board .coord-row,
+.mini-board .board-row {
+  height: 20px;
+}
+
+.mini-board .coord-cell {
+  width: 20px;
+  height: 20px;
+  font-size: 8px;
 }
 
 @media (max-width: 1280px) {

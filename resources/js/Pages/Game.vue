@@ -1,26 +1,18 @@
 <template>
-  <div class="min-h-screen bg-[#001428] font-pixel relative overflow-hidden p-4">
-    <!-- Overlay con efecto escaneo -->
-    <div class="absolute inset-0 pointer-events-none animate-moveLines overlay"></div>
-    
+  <GameLayout>
     <!-- Encabezado -->
-    <div class="flex justify-between items-center mb-4 px-2">
-      <div class="text-[#00FF00]">
-        <h1 class="text-2xl tracking-wider" style="text-shadow: 2px 2px 0px #00334d;">BATALLA NAVAL</h1>
-      </div>
-      <div class="text-[#FF0000] animate-blink">
-        {{ isPlayerTurn ? 'TU TURNO' : 'TURNO ENEMIGO' }}
-      </div>
-      <div class="text-[#00FF00] text-sm">
-        TIEMPO: {{ gameTime }}
-      </div>
-    </div>
+    <GameStatusBar 
+      title="BATALLA NAVAL" 
+      :status="isPlayerTurn ? 'TU TURNO' : 'TURNO ENEMIGO'" 
+      :info="`TIEMPO: ${gameTime}`"
+      class="mb-4"
+    />
 
-    <!-- Contenedor principal con grid explícito y filas/columnas fijas -->
-    <div class="fixed-height-container">
-      <!-- COLUMNA IZQUIERDA: Historial de ataques -->
+    <!-- Contenedor principal con grid de 3 columnas verticales -->
+    <div class="game-grid">
+      <!-- COLUMNA IZQUIERDA: Historial de ataques (400px) -->
       <div class="grid-col-left">
-        <div class="border-2 border-[#00FF00] bg-[#00112b] p-3 shadow-[0_0_10px_rgba(0,255,0,0.3)] h-full flex flex-col">
+        <GamePanel color="green" class="h-full flex flex-col">
           <div class="flex justify-between items-center mb-2">
             <div class="text-[#00FF00] text-sm truncate">HISTORIAL</div>
             <div class="flex items-center">
@@ -29,25 +21,24 @@
           </div>
           
           <!-- Contenedor de scroll con altura fija -->
-          <div class="battle-log flex-grow overflow-y-auto overflow-x-hidden text-xs text-[#00AA00] p-2 bg-[#001800]">
+          <div class="battle-log flex-grow overflow-y-auto overflow-x-hidden text-xs text-[#00AA00] p-2 bg-[#001800] mb-2">
             <p v-for="(log, index) in battleLogs" :key="index" class="mb-2 break-all">
               {{ log }}
             </p>
             <div ref="logEnd"></div>
           </div>
           
-          <div class="flex justify-between items-center mt-2">
+          <div class="flex justify-between items-center">
             <div class="text-[#00FF00] text-xs">HITS: {{ hits }}</div>
             <div class="text-[#00FF00] text-xs">{{ Math.round((hits / (turnCount-1)) * 100) || 0 }}%</div>
           </div>
-        </div>
+        </GamePanel>
       </div>
 
-      <!-- COLUMNA CENTRAL: Tablero enemigo grande -->
+      <!-- COLUMNA CENTRAL: Tablero enemigo grande (1fr) -->
       <div class="grid-col-center">
         <!-- Tablero principal del enemigo -->
-        <div class="border-4 border-[#FF0000] bg-[#120011] p-4 shadow-[0_0_15px_rgba(255,0,0,0.3)] h-full flex flex-col"
-             style="border-image: repeating-linear-gradient(45deg, #FF0000, #FF0000 10px, #770000 10px, #770000 20px) 8;">
+        <GamePanel color="red" class="h-full">
           <div class="flex justify-between items-center mb-3">
             <div class="text-[#FF0000] text-lg">RADAR ENEMIGO</div>
             <div class="flex items-center">
@@ -83,14 +74,14 @@
               {{ lastResult === 'hit' ? '¡IMPACTO!' : 'AGUA...' }}
             </div>
           </div>
-        </div>
+        </GamePanel>
       </div>
 
-      <!-- COLUMNA DERECHA: Mini tablero del jugador y opciones -->
+      <!-- COLUMNA DERECHA: Mini tablero del jugador y opciones (300px) -->
       <div class="grid-col-right">
         <div class="flex flex-col h-full gap-4">
           <!-- Información del jugador y mini tablero -->
-          <div class="border-2 border-[#00FF00] bg-[#00112b] p-3 shadow-[0_0_10px_rgba(0,255,0,0.3)]">
+          <GamePanel color="green" class="flex-[6_0_0%] min-h-0">
             <div class="text-[#00FF00] mb-2 text-center font-bold truncate">{{ playerName }}</div>
             <div class="flex justify-between text-xs text-[#00FF00] mb-1">
               <span>BARCOS:</span>
@@ -110,59 +101,71 @@
                 @cell-click="handlePlayerBoardClick" 
               />
             </div>
-          </div>
+          </GamePanel>
           
           <!-- Opciones de juego -->
-          <div class="border-2 border-[#00FF00] bg-[#00112b] p-3 shadow-[0_0_10px_rgba(0,255,0,0.3)] flex-grow overflow-y-auto">
-            <div class="text-center text-[#00FF00] text-xs mb-3">OPCIONES</div>
-            <ul class="space-y-2">
+          <GamePanel color="green" class="flex-[5_0_0%] min-h-0 overflow-y-auto">
+            <div class="text-center text-[#00FF00] text-xs mb-2">OPCIONES</div>
+            <ul class="space-y-1">
               <li>
-                <button @click="surrender" 
-                        class="w-full bg-[#330000] text-[#FF0000] border border-[#FF0000] py-2 px-2 text-xs mb-1 hover:bg-[#550000] transition-colors truncate">
+                <GameButton 
+                  variant="danger" 
+                  size="sm" 
+                  @click="surrender" 
+                  :full-width="true"
+                >
                   RENDIRSE
-                </button>
+                </GameButton>
               </li>
               <li>
-                <button class="w-full bg-[#00334d] text-[#00FF00] border border-[#00FF00] py-2 px-2 text-xs mb-1 hover:bg-[#004d73] transition-colors truncate">
+                <GameButton size="sm" :full-width="true">
                   NUEVO OPONENTE
-                </button>
+                </GameButton>
               </li>
               <li>
-                <button class="w-full bg-[#00334d] text-[#00FF00] border border-[#00FF00] py-2 px-2 text-xs mb-1 hover:bg-[#004d73] transition-colors truncate">
+                <GameButton size="sm" :full-width="true" @click="initializeBoards">
                   REINICIAR
-                </button>
+                </GameButton>
               </li>
               <li>
-                <button class="w-full bg-[#00334d] text-[#00FF00] border border-[#00FF00] py-2 px-2 text-xs mb-1 hover:bg-[#004d73] transition-colors truncate">
+                <GameButton size="sm" :full-width="true">
                   AYUDA
-                </button>
+                </GameButton>
               </li>
               <li>
-                <button class="w-full bg-[#00334d] text-[#00FF00] border border-[#00FF00] py-2 px-2 text-xs mb-1 hover:bg-[#004d73] transition-colors truncate">
+                <GameButton size="sm" :full-width="true">
                   SALIR
-                </button>
+                </GameButton>
               </li>
             </ul>
-          </div>
+          </GamePanel>
         </div>
       </div>
     </div>
-  </div>
+  </GameLayout>
 </template>
 
 <script>
 import Board from '@/Components/Board.vue';
+import GameLayout from '@/Components/GameLayout.vue';
+import GamePanel from '@/Components/GamePanel.vue';
+import GameButton from '@/Components/GameButton.vue';
+import GameStatusBar from '@/Components/GameStatusBar.vue';
 
 export default {
   name: 'Game',
   components: {
-    Board
+    Board,
+    GameLayout,
+    GamePanel,
+    GameButton,
+    GameStatusBar
   },
   data() {
     return {
       playerName: 'ALMIRANTE',
-      playerBoard: Array(8).fill().map(() => Array(8).fill({ state: 'empty' })),
-      enemyBoard: Array(8).fill().map(() => Array(8).fill({ state: 'empty' })),
+      playerBoard: Array(8).fill().map(() => Array(8).fill({ state: 0 })), // Usar estados numéricos
+      enemyBoard: Array(8).fill().map(() => Array(8).fill({ state: 0 })), // Usar estados numéricos
       playerShipsRemaining: 5,
       enemyShipsRemaining: 5,
       isPlayerTurn: true,
@@ -176,8 +179,32 @@ export default {
         '» BATALLA INICIADA',
         '» COLOCA TUS BARCOS',
         '» ESPERA EL DESPLIEGUE ENEMIGO'
-      ]
+      ],
+      // Preparación para integración con API
+      gameId: null,
+      playerId: null,
+      connectionStatus: 'online',
+      lastActionTimestamp: null
     };
+  },
+  computed: {
+    hitPercentage() {
+      if (this.turnCount <= 1) return 0;
+      return Math.round((this.hits / (this.turnCount - 1)) * 100);
+    },
+    gameStats() {
+      // Preparado para enviar a la API
+      return {
+        playerId: this.playerId,
+        gameId: this.gameId,
+        turnCount: this.turnCount,
+        hits: this.hits,
+        accuracy: this.hitPercentage,
+        gameTime: this.seconds,
+        playerShipsRemaining: this.playerShipsRemaining,
+        enemyShipsRemaining: this.enemyShipsRemaining
+      };
+    }
   },
   mounted() {
     this.startTimer();
@@ -187,12 +214,40 @@ export default {
     this.$nextTick(() => {
       this.scrollToEndOfLogs();
     });
+
+    // Simular conexión con la API
+    this.lastActionTimestamp = Date.now();
+
+    // Preparar para desconexión
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
   },
   beforeUnmount() {
     clearInterval(this.timer);
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
   },
   methods: {
+    // Métodos del juego principal
     initializeBoards() {
+      // Reset game state
+      this.playerBoard = Array(8).fill().map(() => Array(8).fill({ state: 0 }));
+      this.enemyBoard = Array(8).fill().map(() => Array(8).fill({ state: 0 }));
+      this.playerShipsRemaining = 5;
+      this.enemyShipsRemaining = 5;
+      this.isPlayerTurn = true;
+      this.turnCount = 1;
+      this.hits = 0;
+      this.lastResult = null;
+      this.seconds = 0;
+      this.gameTime = '00:00';
+      this.battleLogs = [
+        '» BATALLA INICIADA',
+        '» COLOCA TUS BARCOS',
+        '» ESPERA EL DESPLIEGUE ENEMIGO'
+      ];
+      
+      clearInterval(this.timer);
+      this.startTimer();
+      
       // Colocando naves del jugador como ejemplo
       // (en un juego real, el jugador las colocaría)
       const playerShips = [
@@ -204,7 +259,7 @@ export default {
       ];
       
       playerShips.forEach(([row, col]) => {
-        this.playerBoard[row][col] = { state: 'ship' };
+        this.playerBoard[row][col] = { state: 1 }; // Estado 1 = barco
       });
 
       // Simulando naves enemigas ocultas
@@ -218,49 +273,68 @@ export default {
 
       // En realidad no mostraríamos estas posiciones al jugador
       enemyShips.forEach(([row, col]) => {
-        this.enemyBoard[row][col] = { state: 'hidden-ship' };
+        this.enemyBoard[row][col] = { state: 1 }; // Estado 1 = barco (oculto en tablero enemigo)
       });
       
       this.addBattleLog('» TODOS LOS BARCOS DESPLEGADOS');
       this.addBattleLog('» COMIENZA LA BATALLA');
+      
+      // Para integración con API: Crear un nuevo juego
+      this.createGameSession();
     },
+    
     handlePlayerBoardClick(row, col) {
       // Puede ser útil para colocar barcos inicialmente
       console.log(`Clic en tablero del jugador: ${row}, ${col}`);
+      
+      // Aquí se podría implementar la lógica para colocar barcos manualmente
     },
+    
     handleEnemyBoardClick(row, col) {
       if (!this.isPlayerTurn) return;
       
       const cell = this.enemyBoard[row][col];
       
-      // Evitar disparar dos veces al mismo lugar
-      if (cell.state === 'hit' || cell.state === 'miss') {
+      // Solo podemos disparar a casillas con estado 0 o 1
+      if (cell.state > 1) {
+        // Ya se disparó a esta casilla
         return;
       }
       
-      // Comprobar si hay un barco
-      if (cell.state === 'hidden-ship') {
-        this.enemyBoard[row][col] = { state: 'hit' };
+      // Registrar el último tiempo de acción para la API
+      this.lastActionTimestamp = Date.now();
+      
+      if (cell.state === 1) { // Hay un barco
+        // Actualizar estado: 1 (barco) -> 3 (barco golpeado)
+        this.enemyBoard[row][col] = { state: 3 };
         this.hits++;
         this.enemyShipsRemaining--;
         this.lastResult = 'hit';
         this.addBattleLog(`» ¡IMPACTO CONFIRMADO EN [${String.fromCharCode(65 + col)}${row + 1}]!`);
+        
+        // Para integración con API: Enviar acción del jugador
+        this.sendPlayerAction('attack', row, col, true);
         
         // Comprobar victoria
         if (this.enemyShipsRemaining === 0) {
           this.gameOver(true);
           return;
         }
-      } else {
-        this.enemyBoard[row][col] = { state: 'miss' };
+      } else { // Es una casilla vacía
+        // Actualizar estado: 0 (vacía) -> 2 (disparo fallido)
+        this.enemyBoard[row][col] = { state: 2 };
         this.lastResult = 'miss';
         this.addBattleLog(`» Disparo fallido en [${String.fromCharCode(65 + col)}${row + 1}]`);
+        
+        // Para integración con API: Enviar acción del jugador
+        this.sendPlayerAction('attack', row, col, false);
       }
       
       // Cambiar turno
       this.isPlayerTurn = false;
       setTimeout(this.enemyTurn, 1500);
     },
+    
     enemyTurn() {
       // Simular ataque enemigo
       let row, col;
@@ -271,13 +345,18 @@ export default {
         col = Math.floor(Math.random() * 8);
         
         const cell = this.playerBoard[row][col];
-        if (cell.state !== 'hit' && cell.state !== 'miss') {
+        // Solo puede disparar a casillas con estado 0 o 1
+        if (cell.state <= 1) {
           validMove = true;
         }
       }
       
-      if (this.playerBoard[row][col].state === 'ship') {
-        this.playerBoard[row][col] = { state: 'hit' };
+      // En una implementación real, esto vendría de la API
+      // this.receiveEnemyAction('attack', row, col);
+      
+      if (this.playerBoard[row][col].state === 1) { // Hay un barco
+        // Actualizar estado: 1 (barco) -> 3 (barco golpeado)
+        this.playerBoard[row][col] = { state: 3 };
         this.playerShipsRemaining--;
         this.addBattleLog(`» ¡IMPACTO ENEMIGO EN [${String.fromCharCode(65 + col)}${row + 1}]!`);
         
@@ -286,30 +365,42 @@ export default {
           this.gameOver(false);
           return;
         }
-      } else {
-        this.playerBoard[row][col] = { state: 'miss' };
+      } else { // Es una casilla vacía
+        // Actualizar estado: 0 (vacía) -> 2 (disparo fallido)
+        this.playerBoard[row][col] = { state: 2 };
         this.addBattleLog(`» Ataque enemigo fallido en [${String.fromCharCode(65 + col)}${row + 1}]`);
       }
       
       this.turnCount++;
       this.isPlayerTurn = true;
     },
+    
     surrender() {
       if (confirm("¿Estás seguro que deseas rendirte?")) {
+        // Para integración con API: Enviar acción de rendición
+        this.sendPlayerAction('surrender');
         this.gameOver(false);
       }
     },
+    
     gameOver(playerWon) {
       clearInterval(this.timer);
       if (playerWon) {
         this.addBattleLog('» ¡VICTORIA! TODOS LOS BARCOS ENEMIGOS DESTRUIDOS');
         alert("¡VICTORIA! Has hundido todos los barcos enemigos.");
+        
+        // Para integración con API: Enviar resultado del juego
+        this.sendGameResult('victory');
       } else {
         this.addBattleLog('» DERROTA. TU FLOTA HA SIDO DESTRUIDA');
         alert("DERROTA. Tu flota ha sido destruida.");
+        
+        // Para integración con API: Enviar resultado del juego
+        this.sendGameResult('defeat');
       }
-      // Aquí se podría redirigir a una pantalla de resultados o reiniciar
     },
+    
+    // Métodos de utilidad
     startTimer() {
       this.timer = setInterval(() => {
         this.seconds++;
@@ -318,15 +409,151 @@ export default {
         this.gameTime = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
       }, 1000);
     },
+    
     addBattleLog(message) {
       this.battleLogs.push(message);
       this.$nextTick(() => {
         this.scrollToEndOfLogs();
       });
     },
+    
     scrollToEndOfLogs() {
       if (this.$refs.logEnd) {
         this.$refs.logEnd.scrollIntoView({ behavior: 'smooth' });
+      }
+    },
+    
+    handleBeforeUnload(event) {
+      // Preguntar al usuario si está seguro de abandonar la partida
+      event.preventDefault();
+      event.returnValue = '';
+      
+      // Para integración con API: Guardar estado del juego antes de salir
+      this.saveGameState();
+    },
+    
+    // Métodos para integración futura con API
+    async createGameSession() {
+      try {
+        // En una implementación real, esto haría una llamada a la API
+        console.log('Creando sesión de juego...');
+        /* 
+        const response = await fetch('/api/games', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            playerName: this.playerName,
+          }),
+        });
+        const data = await response.json();
+        this.gameId = data.gameId;
+        this.playerId = data.playerId;
+        */
+        
+        // Simulación
+        this.gameId = 'game_' + Math.floor(Math.random() * 1000);
+        this.playerId = 'player_' + Math.floor(Math.random() * 1000);
+        
+        console.log(`Juego creado: ${this.gameId}`);
+      } catch (error) {
+        console.error('Error al crear el juego:', error);
+        this.connectionStatus = 'offline';
+      }
+    },
+    
+    async sendPlayerAction(actionType, row = null, col = null, hit = null) {
+      if (this.connectionStatus === 'offline') return;
+      
+      try {
+        // En una implementación real, esto haría una llamada a la API
+        console.log(`Enviando acción: ${actionType} ${row},${col}`);
+        /*
+        await fetch(`/api/games/${this.gameId}/actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            playerId: this.playerId,
+            actionType,
+            row,
+            col,
+            hit,
+            timestamp: Date.now()
+          }),
+        });
+        */
+      } catch (error) {
+        console.error('Error al enviar acción:', error);
+        this.connectionStatus = 'offline';
+      }
+    },
+    
+    async sendGameResult(result) {
+      if (this.connectionStatus === 'offline') return;
+      
+      try {
+        // En una implementación real, esto haría una llamada a la API
+        console.log(`Enviando resultado: ${result}`);
+        /*
+        await fetch(`/api/games/${this.gameId}/result`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            playerId: this.playerId,
+            result,
+            stats: this.gameStats,
+            timestamp: Date.now()
+          }),
+        });
+        */
+      } catch (error) {
+        console.error('Error al enviar resultado:', error);
+      }
+    },
+    
+    async saveGameState() {
+      if (this.connectionStatus === 'offline') return;
+      
+      try {
+        // En una implementación real, esto haría una llamada a la API
+        console.log('Guardando estado del juego...');
+        /*
+        await fetch(`/api/games/${this.gameId}/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            playerId: this.playerId,
+            playerBoard: this.playerBoard,
+            enemyBoard: this.enemyBoard,
+            playerShipsRemaining: this.playerShipsRemaining,
+            enemyShipsRemaining: this.enemyShipsRemaining,
+            isPlayerTurn: this.isPlayerTurn,
+            turnCount: this.turnCount,
+            gameTime: this.seconds,
+            hits: this.hits,
+            timestamp: Date.now()
+          }),
+        });
+        */
+      } catch (error) {
+        console.error('Error al guardar estado:', error);
+      }
+    },
+    
+    async receiveEnemyAction(actionType, row, col) {
+      // En una implementación real, esto sería llamado por un websocket o polling
+      console.log(`Recibiendo acción enemiga: ${actionType} ${row},${col}`);
+      
+      // Procesar la acción recibida del enemigo
+      if (actionType === 'attack') {
+        // Implementar lógica de ataque enemigo aquí
       }
     }
   }
@@ -334,146 +561,20 @@ export default {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-.font-pixel {
-  font-family: 'Press Start 2P', cursive;
-}
-
-/* Layout con altura fija */
-.fixed-height-container {
+.game-grid {
   display: grid;
-  grid-template-columns: 200px 1fr 200px;
-  grid-template-rows: 1fr;
-  gap: 16px;
-  height: calc(100vh - 120px);
-  width: 100%;
-  max-height: calc(100vh - 120px);
-  overflow: hidden; /* Crítico: previene scroll en todo el contenedor */
+  grid-template-columns: 400px 1fr 300px;
+  grid-gap: 16px;
+  height: calc(100vh - 100px); /* Adjust height based on header */
 }
 
-.grid-col-left {
-  grid-column: 1 / 2;
-  grid-row: 1;
-  min-width: 200px;
-  max-width: 200px;
+.grid-col-left, .grid-col-center, .grid-col-right {
   height: 100%;
-  overflow: hidden; /* Asegura que el contenedor padre no haga scroll */
+  overflow: hidden;
 }
 
 .battle-log {
-  max-height: 100%; /* Asegura que no exceda su contenedor padre */
-  height: 100%;
-}
-
-.grid-col-center {
-  grid-column: 2 / 3;
-  grid-row: 1;
-  height: 100%;
-  overflow: hidden;
-}
-
-.grid-col-right {
-  grid-column: 3 / 4;
-  grid-row: 1;
-  min-width: 200px;
-  max-width: 200px;
-  height: 100%;
-  overflow: hidden;
-}
-
-.overlay {
-  background: repeating-linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0) 0,
-    rgba(0, 0, 0, 0.1) 1px,
-    rgba(0, 0, 0, 0) 2px
-  );
-}
-
-.battle-log::-webkit-scrollbar {
-  width: 5px;
-}
-
-.battle-log::-webkit-scrollbar-track {
-  background: #001800;
-}
-
-.battle-log::-webkit-scrollbar-thumb {
-  background: #00FF00;
-}
-
-/* Para manejar textos largos */
-.break-all {
-  word-wrap: break-word;
-  word-break: break-all;
-  hyphens: auto;
-  max-width: 100%;
-}
-
-/* Animaciones */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes moveLines {
-  from { background-position: 0 0; }
-  to { background-position: 0 100%; }
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-.animate-blink {
-  animation: blink 1s infinite;
-}
-
-.animate-moveLines {
-  animation: moveLines 6s linear infinite;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .fixed-height-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-  
-  .grid-col-left, .grid-col-center, .grid-col-right {
-    grid-column: 1;
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
-    margin-bottom: 16px;
-  }
-  
-  .grid-col-left {
-    grid-row: 2;
-    height: 200px; /* Altura fija para el historial en móvil */
-  }
-  
-  .grid-col-center {
-    grid-row: 1;
-  }
-  
-  .grid-col-right {
-    grid-row: 3;
-  }
-  
-  .battle-log {
-    max-height: 150px;
-  }
+  min-height: 200px;
+  max-height: calc(100% - 60px);
 }
 </style>

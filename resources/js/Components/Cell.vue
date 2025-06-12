@@ -23,9 +23,9 @@ export default {
   name: 'Cell',
   props: {
     state: {
-      type: String,
-      default: 'empty',
-      validator: (value) => ['empty', 'miss', 'ship', 'hit', 'hidden-ship'].includes(value)
+      type: Number,
+      default: 0,
+      validator: (value) => [0, 1, 2, 3].includes(value)
     },
     isMini: {
       type: Boolean,
@@ -47,18 +47,18 @@ export default {
   computed: {
     cellClasses() {
       return {
-        'empty': this.state === 'empty',
-        'miss': this.state === 'miss',
-        'ship': (this.state === 'ship' && this.isPlayerBoard) || this.state === 'hidden-ship',
-        'hit': this.state === 'hit',
-        'hidden-ship': this.state === 'hidden-ship' && !this.isPlayerBoard
+        'empty': this.state === 0,
+        'ship': this.state === 1 && this.isPlayerBoard,
+        'miss': this.state === 2,
+        'hit': this.state === 3,
+        'hidden-ship': this.state === 1 && !this.isPlayerBoard
       }
     },
     showHitMarker() {
-      return this.state === 'hit';
+      return this.state === 3;
     },
     showMissMarker() {
-      return this.state === 'miss';
+      return this.state === 2;
     }
   },
   methods: {
@@ -82,6 +82,9 @@ export default {
   position: relative;
   cursor: pointer;
   transition: all 0.1s ease;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .mini-cell {
