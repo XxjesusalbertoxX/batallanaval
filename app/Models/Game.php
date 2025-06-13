@@ -9,7 +9,9 @@ class Game extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['status'];
+    protected $fillable = ['status',
+    'code',
+    'current_turn_user_id',];
 
     public function players()
     {

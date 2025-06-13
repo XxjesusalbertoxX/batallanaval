@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AttackController;
+use App\Http\Controllers\GameController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +18,7 @@ use App\Http\Controllers\AttackController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-Route::post('/game/{x}/{y}/attack', [AttackController::class, 'attack'])
-     ->whereNumber('x')->whereNumber('y');
+    Route::post('/game/create', [GameController::class, 'createGame']);
+    Route::post('/game/join', [GameController::class, 'joinGame']);
+    Route::get('/game/{id}/status', [GameController::class, 'checkGameStatus']);
+    Route::post('/game/{x}/{y}/attack', [GameController::class, 'attack']);

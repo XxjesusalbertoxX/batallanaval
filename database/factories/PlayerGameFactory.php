@@ -21,7 +21,7 @@ class PlayerGameFactory extends Factory
         return [
             'user_id' => User::factory(),
             'game_id' => Game::factory(),
-            'board' => json_encode(array_fill(0, 8, array_fill(0, 8, 0))),
+            'board' => json_encode($this->generateRandomBoard(15)),
             'result' => 'pending',
             'ships_sunk' => 0,
             'ships_lost' => 0,
