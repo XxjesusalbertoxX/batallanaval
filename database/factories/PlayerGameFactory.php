@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Game;
+use App\Models\User;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PlayerGame>
@@ -17,9 +19,12 @@ class PlayerGameFactory extends Factory
     public function definition()
     {
         return [
+            'user_id' => User::factory(),
             'game_id' => Game::factory(),
-            'player_name' => $this->faker->name(),
-            'ships' => $this->faker->randomElements(range(0, 63), 16), // 16 barcos aleatorios en 8x8
+            'board' => json_encode(array_fill(0, 8, array_fill(0, 8, 0))),
+            'result' => 'pending',
+            'ships_sunk' => 0,
+            'ships_lost' => 0,
         ];
     }
 }

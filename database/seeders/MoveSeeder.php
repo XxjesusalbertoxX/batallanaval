@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\PlayerGame;
+use App\Models\Move;
 
 class MoveSeeder extends Seeder
 {

@@ -9,19 +9,24 @@ class PlayerGame extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['game_id', 'player_name', 'ships'];
-
-    protected $casts = [
-        'ships' => 'array',
+    protected $fillable = [
+        'user_id',
+        'game_id',
+        'board',
+        'result',
+        'ships_sunk',
+        'ships_lost',
     ];
 
-    public function game()
-    {
-        return $this->belongsTo(Game::class);
+    protected $casts = [
+        'board' => 'array',
+    ];
+
+    public function user() {
+        return $this->belongsTo(User::class);
     }
 
-    public function moves()
-    {
-        return $this->hasMany(Move::class);
+    public function game() {
+        return $this->belongsTo(Game::class);
     }
 }
