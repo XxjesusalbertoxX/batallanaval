@@ -16,10 +16,13 @@ class PlayerGame extends Model
         'result',
         'ships_sunk',
         'ships_lost',
+        'last_seen_at',
+        'ready',
     ];
 
     protected $casts = [
         'board' => 'array',
+        'last_seen_at' => 'date',
     ];
 
     public function user() {

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('games', function (Blueprint $table) {
             $table->id();
             $table->enum('status', ['waiting', 'started', 'finished'])->default('waiting');
-            $table->unsignedBigInteger('current_turn_user_id')->nullable();
+            $table->foreign('current_turn_user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('code')->unique(); // por ejemplo, algo como 'ABC123'
             $table->timestamps();
         });

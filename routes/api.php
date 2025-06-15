@@ -15,10 +15,15 @@ use App\Http\Controllers\GameController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::middleware('auth')->group(function () {
     Route::post('/game/create', [GameController::class, 'createGame']);
     Route::post('/game/join', [GameController::class, 'joinGame']);
     Route::get('/game/{id}/status', [GameController::class, 'checkGameStatus']);
     Route::post('/game/{x}/{y}/attack', [GameController::class, 'attack']);
+    Route::post('/game/{id}/leave', [GameController::class, 'leaveGame']);
+    Route::post('/game/{id}/ready', [GameController::class, 'setReady']);
+});

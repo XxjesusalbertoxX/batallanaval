@@ -17,4 +17,10 @@ class Game extends Model
     {
         return $this->hasMany(PlayerGame::class);
     }
+
+    public function currentTurnUser() 
+    {
+        return $this->belongsTo(User::class, 'current_turn_user_id');
+    }
+
 }
