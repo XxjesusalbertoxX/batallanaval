@@ -24,13 +24,17 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('welcome');
 
 Route::get('/index/game/{id}', [GameController::class, 'showGame'])->name('game.index');
 
 Route::get('/game', function () {
     return Inertia::render('Game');
 })->name('game');
+
+Route::get('/search-game', function () {
+    return Inertia::render('SearchGame');
+})->name('search-game');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
