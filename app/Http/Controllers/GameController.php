@@ -17,27 +17,27 @@ class GameController extends Controller
     use GenerateBoard;
 
     public function showGame($id)
-{
-    $userId = 1?:Auth::id();
+    {
+        $userId = 1?:Auth::id();
 
-    // valida que el usuario forme parte de la partida
-    $exists = PlayerGame::where('game_id', $id)
-                ->where('user_id', $userId)
-                ->exists();
-    if (! $exists) {
-        abort(403, 'No puedes ver esta partida');
+        // valida que el usuario forme parte de la partida
+        $exists = PlayerGame::where('game_id', $id)
+                    ->where('user_id', $userId)
+                    ->exists();
+        if (! $exists) {
+            abort(403, 'No puedes ver esta partida');
+        }
+
+        // cargo game + players + user de cada player
+        $game = Game::with('players.user')->findOrFail($id);
+
+        return Inertia::render('Index', [
+            'gameId'   => $game->id,
+            'player'   => User::find($userId),
+            'code'     => $game->code,
+            'players'  => $game->players,           // ← aquí
+        ]);
     }
-
-    // cargo game + players + user de cada player
-    $game = Game::with('players.user')->findOrFail($id);
-
-    return Inertia::render('Index', [
-        'gameId'   => $game->id,
-        'player'   => User::find($userId),
-        'code'     => $game->code,
-        'players'  => $game->players,           // ← aquí
-    ]);
-}
 
     /**
      * Crea una nueva partida y asigna al primer jugador.
@@ -123,8 +123,6 @@ class GameController extends Controller
 
         return response()->json([
             'message'     => 'Listo',
-            'all_ready'   => $allReady,
-            'game_status' => $allReady ? 'started' : 'waiting',
         ]);
     }
 
@@ -309,7 +307,7 @@ class GameController extends Controller
             $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
 
             if ($opponent && $opponent->last_seen_at) {
-                $inactiveLimit = now()->subSeconds(60);
+                $inactiveLimit = now()->subSeconds(90);
 
                 if ($opponent->last_seen_at < $inactiveLimit) {
                     return $this->declareVictory($me, $opponent, $game);

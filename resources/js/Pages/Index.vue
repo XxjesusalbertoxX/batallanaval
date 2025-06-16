@@ -108,13 +108,12 @@ export default {
     }
   },
   methods: {
-    startGame() {
-      if (!this.playerName.trim()) {
-        return;
-      }
-      
-      console.log('Iniciando batalla...');
-      // Aquí iría la lógica para iniciar la partida
+    setReady() {
+      axios.post(`/api/game/${this.gameId}/ready`)
+        .then(({ data }) => {
+          console.log(data.message)
+        })
+        .catch(err => console.error(err));
     },
     checkGameStatus() {
       // Aquí iría la lógica para verificar el estado del juego
@@ -126,12 +125,10 @@ export default {
         .then(({ data }) => {
           this.playersState = data.players
                     // si ya arrancó el juego, podrías redirigir o actualizar vista
-                    console.log('Players al montar:', this.playersState)
-                    console.log(data.status)
-                    if (data.status === 'started') {
-                      // …por ejemplo: this.$router.push(…)
+                    // if (data.status === 'started') {
+                    //   // …por ejemplo: this.$router.push(…)
 
-                    }
+                    // }
                   })
                   .catch(err => console.error(err))
     }
