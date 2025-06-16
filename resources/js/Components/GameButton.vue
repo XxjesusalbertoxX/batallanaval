@@ -27,6 +27,7 @@
 <script>
 export default {
   name: 'GameButton',
+  emits: ['click'],
   props: {
     variant: {
       type: String,
@@ -47,5 +48,7 @@ export default {
       default: false
     }
   }
+
 }
+
 </script>

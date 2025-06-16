@@ -24,7 +24,10 @@
             </template>
             
             <template #action>
-              <GameButton>LISTO</GameButton>
+              <div class="flex flex-col gap-4">
+                <GameButton>LISTO</GameButton>
+                <GameButton @click="exitGame" variant="danger">SALIR</GameButton>
+              </div>
             </template>
           </PlayerCard>
         </GamePanel>
@@ -115,6 +118,18 @@ export default {
       
       console.log('Iniciando batalla...');
       // Aquí iría la lógica para iniciar la partida
+    },
+    exitGame() {
+      console.log('Saliendo de la búsqueda de partida...');
+      // Aquí iría la lógica para salir de la partida
+      axios.post(`/api/game/${this.gameId}/exit`)
+        .then(response => {
+          // Redirigir al usuario a la página principal o donde corresponda
+          window.location.href = '/';
+        })
+        .catch(error => {
+          console.error('Error al salir del juego:', error);
+        });
     },
     checkGameStatus() {
       // Aquí iría la lógica para verificar el estado del juego
