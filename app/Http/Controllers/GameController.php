@@ -18,7 +18,7 @@ class GameController extends Controller
 
     public function showGame($id)
     {
-        $userId = 1?:Auth::id();
+        $userId = Auth::id();
 
         // valida que el usuario forme parte de la partida
         $exists = PlayerGame::where('game_id', $id)
@@ -45,7 +45,7 @@ class GameController extends Controller
      */
     public function createGame()
     {
-        $user1 = 1 ?: Auth::id();
+        $user1 = Auth::id();
 
         $game = Game::create([
             'code' => strtoupper(Str::random(6)),
@@ -70,7 +70,7 @@ class GameController extends Controller
      */
     public function joinGame(Request $request)
     {
-        $user2 = 2?:Auth::id();
+        $user2 = Auth::id();
         $code  = $request->input('code');
 
         $game = Game::where('code', $code)
@@ -104,7 +104,7 @@ class GameController extends Controller
      */
     public function setReady($id)
     {
-        $userId = 2?:Auth::id();  
+        $userId = Auth::id();  
 
         $playerGame = PlayerGame::where('game_id', $id)
             ->where('user_id', $userId)
@@ -148,12 +148,13 @@ class GameController extends Controller
             $game->update(['current_turn_user_id' => $first->user_id]);
         }
 
-        $mine = $players->firstWhere('user_id',1?:Auth::id());
+        $mine = $players->firstWhere('user_id',Auth::id());
 
-        return response()->json([
+        return Inertia::render('Game', [
             'message'               => 'Partida iniciada',
             'current_turn_user_id'  => $game->current_turn_user_id,
             'my_board'              => json_decode($mine->board, true),
+          // ← aquí
         ]);
     }
 
@@ -302,7 +303,7 @@ class GameController extends Controller
         $game = Game::with('players.user')->findOrFail($id);
 
         if ($game->status === 'started') {
-            $userId   = 1?:Auth::id();
+            $userId   = Auth::id();
             $me       = $game->players->firstWhere('user_id', $userId);
             $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
 
