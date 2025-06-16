@@ -24,7 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('wins')->default(0); // Partidas ganadas
             $table->unsignedBigInteger('losses')->default(0); // Partidas perdidas
             $table->unsignedBigInteger('precision')->default(0); // Puntos totales
-            $table->unsignedBigInteger('points')->default(1);
+            $table->unsignedBigInteger('exp')->default(1);
             $table->unsignedBigInteger('level')->default(1);
             $table->timestamps();
         });
