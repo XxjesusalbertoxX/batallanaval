@@ -18,23 +18,24 @@ class GameController extends Controller
 
     public function showGame($id)
 {
-    $userId = 1 ?: Auth::id();
+    $userId = 1?:Auth::id();
 
-    // Opcional: valida que el usuario forme parte de la partida
+    // valida que el usuario forme parte de la partida
     $exists = PlayerGame::where('game_id', $id)
                 ->where('user_id', $userId)
                 ->exists();
-
     if (! $exists) {
         abort(403, 'No puedes ver esta partida');
     }
 
-    $game = Game::findOrFail($id);
+    // cargo game + players + user de cada player
+    $game = Game::with('players.user')->findOrFail($id);
 
     return Inertia::render('Index', [
         'gameId'   => $game->id,
-        'player' => User::find($userId),
+        'player'   => User::find($userId),
         'code'     => $game->code,
+        'players'  => $game->players,           // ← aquí
     ]);
 }
 
@@ -69,7 +70,7 @@ class GameController extends Controller
      */
     public function joinGame(Request $request)
     {
-        $user2 = Auth::id();
+        $user2 = 2?:Auth::id();
         $code  = $request->input('code');
 
         $game = Game::where('code', $code)
@@ -244,15 +245,31 @@ class GameController extends Controller
         $game->status = 'finished';
         $game->current_turn_user_id = null;
 
+        // Guardar resultados del juego
         $winner->save();
         $loser->save();
         $game->save();
+
+        // 🎯 Actualizar EXP del ganador y perdedor
+        $winnerUser = $winner->user; // Relación belongsTo: PlayerGame → User
+        $loserUser  = $loser->user;
+
+        $winnerUser->exp += 100;
+        $loserUser->exp  += 50;
+
+        $winnerUser->wins += 1;
+        $loserUser->losses += 1;
+
+        // Se activa el trigger aquí al hacer update
+        $winnerUser->save();
+        $loserUser->save();
 
         return response()->json([
             'status'  => 'win',
             'message' => '¡Has ganado la partida!',
         ]);
     }
+
 
     // 2. Heartbeat para mantener la sesión activa
     /**
@@ -284,7 +301,7 @@ class GameController extends Controller
      */
     public function checkGameStatus($id)
     {
-        $game = Game::with('players')->findOrFail($id);
+        $game = Game::with('players.user')->findOrFail($id);
 
         if ($game->status === 'started') {
             $userId   = Auth::id();
@@ -304,11 +321,7 @@ class GameController extends Controller
 
         return response()->json([
             'status'               => $game->status,
-            'players'              => $game->players->map(fn($p) => [
-                'id'    => $p->user->id,
-                'name'  => $p->user->name,
-                'ready' => $p->ready,
-            ]),
+            'players'              => $game->players,
             'current_turn_user_id' => $game->current_turn_user_id,
         ]);
     }

@@ -18,10 +18,9 @@
       <div class="flex flex-col md:flex-row justify-between gap-8">
         <!-- Panel jugador -->
         <GamePanel color="green" title="JUGADOR" class="flex-1">
-          <PlayerCard :is-player="true" :player-name="player.name" :stats="player">
+          <PlayerCard :is-player="true" :player-name="me.user?.name || me.user_id" :stats="me.user">
             <template #name>
-              <input v-model="player.name" 
-                     class="bg-[#00334d] text-[#00FF00] border border-[#00FF00] px-2 max-w-[150px] font-pixel text-right" />
+              <p>{{ me.user.name }}</p>
             </template>
             
             <template #action>
@@ -32,16 +31,17 @@
 
         <!-- Panel oponente -->
         <GamePanel color="red" title="OPONENTE" class="flex-1">
-          <PlayerCard 
-            :is-player="false" 
-            player-name="???" 
-            wait-text="ESPERANDO OPONENTE"
-          >
+          <PlayerCard :is-player="true" :player-name="opponent.user?.name" :stats="opponent.user">
+            <template #name>
+              <p>{{ opponent.user.name }}</p>
+            </template>
+            
             <template #action>
-              <GameButton variant="disabled">ESPERANDO</GameButton>
+              <GameButton>LISTO</GameButton>
             </template>
           </PlayerCard>
         </GamePanel>
+
       </div>
 
       <!-- Botón para iniciar -->
@@ -81,27 +81,30 @@ export default {
     GameButton
   },
   props: {
-    gameId: {
-      type: Number,
-      required: true
-    },
-    player: {
-      type: Object,
-      required: true
-    },
-    code: {
-      type: String,
-      required: true
-    } 
+    gameId:  { type: Number, required: true },
+    player:  { type: Object, required: true },
+    code:    { type: String, required: true },
+    players: { type: Array,  required: true }  // ← nueva prop
   },
   data() {
     return {
       playerName: '',
-      playerStats: {
-        wins: 0,
-        losses: 0,
-        accuracy: 0
-      }
+      playersState: this.players,   // ← inicializo con lo que viene del servidor
+      intervalId:  null
+    }
+  },
+  computed: {
+    me() {
+      return (
+        this.playersState.find(p => p.user_id === this.player.id)
+        || { user: {}, user_id: null }
+      )
+    },
+    opponent() {
+      return (
+        this.playersState.find(p => p.user_id !== this.player.id)
+        || { user: {}, user_id: null }
+      )
     }
   },
   methods: {
@@ -116,15 +119,31 @@ export default {
     checkGameStatus() {
       // Aquí iría la lógica para verificar el estado del juego
       console.log('Verificando estado del juego...');
+      console.log(this.opponent.user.name)
+      console.log(this.opponent, this.me)
 
-      axios.get(`/api/games/${this.gameId}/status`)
-        .then(response => {
-          console.log('Estado del juego:', response.data);
-        })
-        .catch(error => {
-          console.error('Error al verificar el estado del juego:', error);
-        });
+      return axios.get(`/api/game/${this.gameId}/status`)
+        .then(({ data }) => {
+          this.playersState = data.players
+                    // si ya arrancó el juego, podrías redirigir o actualizar vista
+                    console.log('Players al montar:', this.playersState)
+                    console.log(data.status)
+                    if (data.status === 'started') {
+                      // …por ejemplo: this.$router.push(…)
+
+                    }
+                  })
+                  .catch(err => console.error(err))
     }
+  },
+  mounted() {
+    this.checkGameStatus()
+
+    this.intervalId = setInterval(this.checkGameStatus, 15000)
+
+  },
+  beforeUnmount() {
+    clearInterval(this.intervalId)
   }
 }
 </script>

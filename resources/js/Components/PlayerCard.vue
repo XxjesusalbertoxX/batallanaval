@@ -103,7 +103,7 @@ export default {
       default: () => ({
         wins: 0,
         losses: 0,
-        accuracy: 0
+        precision: 0
       })
     },
     waitingText: {
