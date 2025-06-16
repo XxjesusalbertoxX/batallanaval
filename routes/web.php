@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -25,9 +26,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/inicio', function () {
-    return Inertia::render('Index');
-})->name('index');
+Route::get('/index/game/{id}', [GameController::class, 'showGame'])->name('game.index');
 
 Route::get('/game', function () {
     return Inertia::render('Game');
@@ -44,3 +43,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/backend-web.php';
+
+

@@ -18,9 +18,9 @@
       <div class="flex flex-col md:flex-row justify-between gap-8">
         <!-- Panel jugador -->
         <GamePanel color="green" title="JUGADOR" class="flex-1">
-          <PlayerCard :is-player="true" :player-name="playerName" :stats="playerStats">
+          <PlayerCard :is-player="true" :player-name="player.name" :stats="player">
             <template #name>
-              <input v-model="playerName" 
+              <input v-model="player.name" 
                      class="bg-[#00334d] text-[#00FF00] border border-[#00FF00] px-2 max-w-[150px] font-pixel text-right" />
             </template>
             
@@ -57,7 +57,7 @@
       
       <!-- Pie de página -->
       <div class="text-center mt-8 text-[8px] text-[#007700]">
-        BATALLA NAVAL RETRO - PREPARADO PARA COMBATE
+        BATALLA NAVAL RETRO - PREPARADO PARA EL COMBATE
       </div>
     </div>
   </GameLayout>
@@ -69,6 +69,7 @@ import GameTitle from '@/Components/GameTitle.vue';
 import GamePanel from '@/Components/GamePanel.vue';
 import PlayerCard from '@/Components/PlayerCard.vue';
 import GameButton from '@/Components/GameButton.vue';
+import axios from 'axios';
 
 export default {
   name: 'Index',
@@ -78,6 +79,20 @@ export default {
     GamePanel,
     PlayerCard,
     GameButton
+  },
+  props: {
+    gameId: {
+      type: Number,
+      required: true
+    },
+    player: {
+      type: Object,
+      required: true
+    },
+    code: {
+      type: String,
+      required: true
+    } 
   },
   data() {
     return {
@@ -97,6 +112,18 @@ export default {
       
       console.log('Iniciando batalla...');
       // Aquí iría la lógica para iniciar la partida
+    },
+    checkGameStatus() {
+      // Aquí iría la lógica para verificar el estado del juego
+      console.log('Verificando estado del juego...');
+
+      axios.get(`/api/games/${this.gameId}/status`)
+        .then(response => {
+          console.log('Estado del juego:', response.data);
+        })
+        .catch(error => {
+          console.error('Error al verificar el estado del juego:', error);
+        });
     }
   }
 }

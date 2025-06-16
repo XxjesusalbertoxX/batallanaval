@@ -22,7 +22,8 @@ class PlayerGame extends Model
 
     protected $casts = [
         'board' => 'array',
-        'last_seen_at' => 'date',
+        'last_seen_at' => 'datetime',
+        'ready' => 'boolean',
     ];
 
     public function user() {

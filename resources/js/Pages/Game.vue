@@ -437,7 +437,7 @@ export default {
       try {
         // En una implementación real, esto haría una llamada a la API
         console.log('Creando sesión de juego...');
-        /* 
+        
         const response = await fetch('/api/games', {
           method: 'POST',
           headers: {
@@ -450,13 +450,14 @@ export default {
         const data = await response.json();
         this.gameId = data.gameId;
         this.playerId = data.playerId;
-        */
+        this.code = data.code;
+        
         
         // Simulación
-        this.gameId = 'game_' + Math.floor(Math.random() * 1000);
-        this.playerId = 'player_' + Math.floor(Math.random() * 1000);
+        // this.gameId = 'game_' + Math.floor(Math.random() * 1000);
+        // this.playerId = 'player_' + Math.floor(Math.random() * 1000);
         
-        console.log(`Juego creado: ${this.gameId}`);
+        // console.log(`Juego creado: ${this.gameId}`);
       } catch (error) {
         console.error('Error al crear el juego:', error);
         this.connectionStatus = 'offline';
@@ -469,7 +470,7 @@ export default {
       try {
         // En una implementación real, esto haría una llamada a la API
         console.log(`Enviando acción: ${actionType} ${row},${col}`);
-        /*
+        
         await fetch(`/api/games/${this.gameId}/actions`, {
           method: 'POST',
           headers: {
@@ -484,7 +485,7 @@ export default {
             timestamp: Date.now()
           }),
         });
-        */
+        
       } catch (error) {
         console.error('Error al enviar acción:', error);
         this.connectionStatus = 'offline';

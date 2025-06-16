@@ -1,7 +1,16 @@
 <template>
   <div>
     <!-- Avatar del jugador -->
-    <div 
+  <img
+    :src="stats.avatar_path"
+    alt="Avatar animado"
+    :class="[
+      'mx-auto my-4 w-24 h-24 object-cover rounded-full overflow-hidden',
+      isPlayer ? 'bg-[#004400] border-2 border-[#00FF00]' : 'bg-[#440000] border-2 border-[#FF0000] animate-pulse-slow opacity-50'
+    ]"
+  />
+
+    <!-- <div 
       :class="[
         'mx-auto my-4 w-24 h-24 overflow-hidden relative',
         isPlayer ? 'bg-[#004400] border-2 border-[#00FF00]' : 'bg-[#440000] border-2 border-[#FF0000] animate-pulse-slow opacity-50'
@@ -16,7 +25,7 @@
           <span class="text-[#FF0000] text-xs text-center">{{ waitingText }}</span>
         </div>
       </template>
-    </div>
+    </div> -->
 
     <!-- Estadísticas del jugador -->
     <div 
@@ -51,21 +60,22 @@
       <div class="flex justify-between items-center border-b border-dashed pb-1"
            :class="isPlayer ? 'border-[#007700]' : 'border-[#770000]'">
         <span>PRECISIÓN:</span>
-        <span>{{ isPlayer ? stats.accuracy + '%' : '???' }}</span>
+        <span>{{ isPlayer ? stats.precision + '%' : '???' }}</span>
       </div>
       
       <!-- Barcos -->
       <div class="flex justify-between items-center border-b border-dashed pb-1"
            :class="isPlayer ? 'border-[#007700]' : 'border-[#770000]'">
-        <span>BARCOS:</span>
-        <div class="flex space-x-1">
+        <span>Nivel:</span>
+        <!-- <div class="flex space-x-1">
           <div 
             v-for="i in 5" 
             :key="`ship-${i}`" 
             class="w-3 h-3" 
             :class="isPlayer ? 'bg-[#00FF00]' : 'bg-[#330000]'"
           ></div>
-        </div>
+        </div> -->
+        <span>{{ isPlayer ? stats.level: '???' }}</span>
       </div>
     </div>
     

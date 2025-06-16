@@ -5,14 +5,38 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PlayerGame;
 use App\Models\Game;
+use App\Models\User;
 use Illuminate\Support\Str;
 use App\Traits\GenerateBoard;
 
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class GameController extends Controller
 {
     use GenerateBoard;
+
+    public function showGame($id)
+{
+    $userId = 1 ?: Auth::id();
+
+    // Opcional: valida que el usuario forme parte de la partida
+    $exists = PlayerGame::where('game_id', $id)
+                ->where('user_id', $userId)
+                ->exists();
+
+    if (! $exists) {
+        abort(403, 'No puedes ver esta partida');
+    }
+
+    $game = Game::findOrFail($id);
+
+    return Inertia::render('Index', [
+        'gameId'   => $game->id,
+        'player' => User::find($userId),
+        'code'     => $game->code,
+    ]);
+}
 
     /**
      * Crea una nueva partida y asigna al primer jugador.
@@ -20,7 +44,7 @@ class GameController extends Controller
      */
     public function createGame()
     {
-        $user1 = Auth::id();
+        $user1 = 1 ?: Auth::id();
 
         $game = Game::create([
             'code' => strtoupper(Str::random(6)),
@@ -36,7 +60,7 @@ class GameController extends Controller
             'ready'    => false,
         ]);
 
-        return response()->json(['code' => $game->code]);
+        return redirect()->route('game.index', ['id' => $game->id]);
     }
 
     /**
@@ -64,7 +88,13 @@ class GameController extends Controller
             'ready'    => false,
         ]);
 
-        return response()->json(['message' => 'Unido correctamente']);
+        return response()->json([
+            'message'    => 'Unido correctamente',
+            'game_id'    => $game->id,
+            'player_id'  => $user2,
+            'opponent'   => $game->players()->where('user_id', '!=', $user2)->with('user')->first(),
+            'status'     => $game->status,
+        ]);
     }
 
     /**
@@ -90,7 +120,11 @@ class GameController extends Controller
             Game::where('id', $id)->update(['status' => 'started']);
         }
 
-        return response()->json(['message' => 'Listo']);
+        return response()->json([
+            'message'     => 'Listo',
+            'all_ready'   => $allReady,
+            'game_status' => $allReady ? 'started' : 'waiting',
+        ]);
     }
 
     /**
@@ -128,9 +162,9 @@ class GameController extends Controller
      * Realiza un ataque a las coordenadas (x, y) del oponente.
      * Valida que sea el turno del jugador y actualiza el tablero del oponente.
      */
-    public function attack($x, $y)
+    public function attack($x, $y, $userId = null)
     {
-        $userId = Auth::id();
+        $userId = $userId ?: Auth::id();
 
         if ($x < 0 || $x > 7 || $y < 0 || $y > 7) {
             return response()->json(['error' => 'Coordenadas inválidas'], 422);
@@ -253,28 +287,41 @@ class GameController extends Controller
         $game = Game::with('players')->findOrFail($id);
 
         if ($game->status === 'started') {
+            $userId   = Auth::id();
+            $me       = $game->players->firstWhere('user_id', $userId);
+            $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
+
+            if ($opponent && $opponent->last_seen_at) {
+                $inactiveLimit = now()->subSeconds(60);
+
+                if ($opponent->last_seen_at < $inactiveLimit) {
+                    return $this->declareVictory($me, $opponent, $game);
+                }
+            }
+
             return $this->start($id);
         }
 
         return response()->json([
             'status'               => $game->status,
             'players'              => $game->players->map(fn($p) => [
-                'id'   => $p->user->id,
-                'name' => $p->user->name,
-                'ready'=> $p->ready,
+                'id'    => $p->user->id,
+                'name'  => $p->user->name,
+                'ready' => $p->ready,
             ]),
             'current_turn_user_id' => $game->current_turn_user_id,
         ]);
     }
 
 
+
     /**
      * Permite a un jugador abandonar una partida.
      * Si el jugador es el único en la partida, se elimina la partida.
      */
-    public function leaveGame($id)
+    public function surrender($id, $userId = null)
     {
-        $userId = Auth::id();
+        $userId = $userId ?: Auth::id();
 
         $playerGame = PlayerGame::where('game_id', $id)
             ->where('user_id', $userId)
@@ -296,6 +343,37 @@ class GameController extends Controller
     }
 
     
+    // frontend - propuesta --------------------------------------------------------------------------------
+    /**
+     * Maneja las acciones de los jugadores en la partida.
+     * Permite atacar o rendirse.
+     */
+    public function action(Request $request, $gameId)
+    {
+        $userId = Auth::id();
 
+        $action = $request->input('actionType');
+
+        switch ($action) {
+            case 'attack':
+                // Validar que vengan coordenadas
+                $x = $request->input('row');
+                $y = $request->input('col');
+
+                if (!is_numeric($x) || !is_numeric($y)) {
+                    return response()->json(['error' => 'Faltan coordenadas'], 422);
+                }
+
+                // Usamos la función ya existente
+                return $this->attack($x, $y, $userId);
+
+            case 'surrender':
+                // Usamos tu función existente
+                return $this->surrender($gameId, $userId);
+
+            default:
+                return response()->json(['error' => 'Acción no válida'], 400);
+        }
+    }
 
 }

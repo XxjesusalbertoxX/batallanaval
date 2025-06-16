@@ -163,7 +163,7 @@ export default {
   methods: {
     startGame() {
       console.log('Iniciando juego...');
-      router.visit('/inicio');
+      router.post('/game/create');
     },
     openLoginModal() {
       this.closeModals();

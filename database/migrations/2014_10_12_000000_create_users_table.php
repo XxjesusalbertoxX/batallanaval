@@ -20,6 +20,12 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->string('avatar_path')->default("/gif/dog.gif");
+            $table->unsignedBigInteger('wins')->default(0); // Partidas ganadas
+            $table->unsignedBigInteger('losses')->default(0); // Partidas perdidas
+            $table->unsignedBigInteger('precision')->default(0); // Puntos totales
+            $table->unsignedBigInteger('points')->default(1);
+            $table->unsignedBigInteger('level')->default(1);
             $table->timestamps();
         });
     }
