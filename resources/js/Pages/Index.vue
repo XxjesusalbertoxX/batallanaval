@@ -25,7 +25,7 @@
             
             <template #action>
               <div class="flex flex-col gap-4">
-                <GameButton>LISTO</GameButton>
+                <GameButton @click="setReady">LISTO</GameButton>
                 <GameButton @click="exitGame" variant="danger">SALIR</GameButton>
               </div>
             </template>
@@ -40,22 +40,11 @@
             </template>
             
             <template #action>
-              <GameButton>LISTO</GameButton>
+              <GameButton @click="setReady">LISTO</GameButton>
             </template>
           </PlayerCard>
         </GamePanel>
 
-      </div>
-
-      <!-- Botón para iniciar -->
-      <div class="text-center mt-10">
-        <GameButton 
-          size="lg" 
-          :disabled="!playerName.trim()"
-          @click="startGame"
-        >
-          INICIAR BATALLA
-        </GameButton>
       </div>
       
       <!-- Pie de página -->
@@ -112,7 +101,7 @@ export default {
   },
   methods: {
     setReady() {
-      axios.post(`/api/game/${this.gameId}/ready`)
+      axios.post(`/game/${this.gameId}/ready`)
         .then(({ data }) => {
           console.log(data.message)
         })
@@ -133,8 +122,6 @@ export default {
     checkGameStatus() {
       // Aquí iría la lógica para verificar el estado del juego
       console.log('Verificando estado del juego...');
-      console.log(this.opponent.user.name)
-      console.log(this.opponent, this.me)
 
       return axios.get(`/api/game/${this.gameId}/status`)
         .then(({ data }) => {

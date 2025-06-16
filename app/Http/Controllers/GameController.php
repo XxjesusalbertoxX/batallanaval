@@ -104,7 +104,7 @@ class GameController extends Controller
      */
     public function setReady($id)
     {
-        $userId = Auth::id();  
+        $userId = 2?:Auth::id();  
 
         $playerGame = PlayerGame::where('game_id', $id)
             ->where('user_id', $userId)
@@ -148,7 +148,7 @@ class GameController extends Controller
             $game->update(['current_turn_user_id' => $first->user_id]);
         }
 
-        $mine = $players->firstWhere('user_id', Auth::id());
+        $mine = $players->firstWhere('user_id',1?:Auth::id());
 
         return response()->json([
             'message'               => 'Partida iniciada',
@@ -302,7 +302,7 @@ class GameController extends Controller
         $game = Game::with('players.user')->findOrFail($id);
 
         if ($game->status === 'started') {
-            $userId   = Auth::id();
+            $userId   = 1?:Auth::id();
             $me       = $game->players->firstWhere('user_id', $userId);
             $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
 

@@ -9,4 +9,5 @@ use App\Http\Controllers\GameController;
  */
 
 Route::post('/game/create', [GameController::class, 'createGame']);
+Route::post('/game/{id}/ready', [GameController::class, 'setReady']);
 
