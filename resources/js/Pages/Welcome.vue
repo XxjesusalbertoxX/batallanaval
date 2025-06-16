@@ -12,7 +12,10 @@
             <p class="text-xs leading-loose">HUNDE LA FLOTA ENEMIGA</p>
           </div>
           
-          <GameButton size="lg" @click="startGame">INICIAR JUEGO</GameButton>
+          <div class="flex flex-col space-y-4">
+            <GameButton size="lg" @click="startGame">INICIAR JUEGO</GameButton>
+            <GameButton size="lg" @click="joinGame">UNIRSE A JUEGO</GameButton>
+          </div>
           
           <!-- Botones de autenticación simplificados -->
           <div class="mt-5 flex justify-center space-x-4">
@@ -172,6 +175,10 @@ export default {
     startGame() {
       console.log('Iniciando juego...');
       router.post('/game/create');
+    },
+    joinGame() {
+      console.log('Buscando juego...');
+      router.get('/search-game');
     },
     openLoginModal() {
       this.closeModals();
