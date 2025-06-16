@@ -36,6 +36,10 @@ Route::get('/search-game', function () {
     return Inertia::render('SearchGame');
 })->name('search-game');
 
+Route::get('/stats', function () {
+    return Inertia::render('Stats');
+})->name('stats');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

@@ -13,6 +13,9 @@
           VS
         </span>
       </div>
+      
+      <!-- Código del juego para compartir -->
+      <CodeSpan :code="code" />
 
       <!-- Paneles de jugadores -->
       <div class="flex flex-col md:flex-row justify-between gap-8">
@@ -61,6 +64,7 @@ import GameTitle from '@/Components/GameTitle.vue';
 import GamePanel from '@/Components/GamePanel.vue';
 import PlayerCard from '@/Components/PlayerCard.vue';
 import GameButton from '@/Components/GameButton.vue';
+import CodeSpan from '@/Components/CodeSpan.vue';
 import axios from 'axios';
 
 export default {
@@ -70,7 +74,8 @@ export default {
     GameTitle,
     GamePanel,
     PlayerCard,
-    GameButton
+    GameButton,
+    CodeSpan
   },
   props: {
     gameId:  { type: Number, required: true },
