@@ -17,7 +17,7 @@
           <!-- Botones de autenticación simplificados -->
           <div class="mt-5 flex justify-center space-x-4">
             <!-- Mostrar cuando NO está autenticado -->
-            <div v-if="!isAuthenticated" class="flex space-x-4">
+            <div v-if="!auth.user" class="flex space-x-4">
               <button @click="openLoginModal" class="auth-button">
                 INICIAR SESIÓN
               </button>
@@ -28,7 +28,7 @@
             
             <!-- Mostrar cuando SÍ está autenticado -->
             <div v-else class="flex flex-col items-center">
-              <p class="text-xs mb-2">BIENVENIDO, {{ username }}</p>
+              <p class="text-xs mb-2">BIENVENIDO, {{ auth.user.name }}</p>
               <button @click="logout" class="auth-button">
                 CERRAR SESIÓN
               </button>
@@ -63,10 +63,12 @@
             <div class="mb-4">
               <label class="block text-[#00FF00] text-xs mb-1">EMAIL:</label>
               <input type="email" v-model="loginForm.email" class="modal-input" required>
+              <div v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</div>
             </div>
             <div class="mb-6">
               <label class="block text-[#00FF00] text-xs mb-1">CONTRASEÑA:</label>
               <input type="password" v-model="loginForm.password" class="modal-input" required>
+              <div v-if="errors.password" class="text-red-500 text-xs mt-1">{{ errors.password }}</div>
             </div>
             <div class="text-center">
               <p v-if="loginError" class="text-red-500 text-xs mb-3">{{ loginError }}</p>
@@ -91,14 +93,17 @@
             <div class="mb-3">
               <label class="block text-[#00FF00] text-xs mb-1">NOMBRE:</label>
               <input type="text" v-model="registerForm.name" class="modal-input" required>
+              <div v-if="errors.name" class="text-red-500 text-xs mt-1">{{ errors.name }}</div>
             </div>
             <div class="mb-3">
               <label class="block text-[#00FF00] text-xs mb-1">EMAIL:</label>
               <input type="email" v-model="registerForm.email" class="modal-input" required>
+              <div v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</div>
             </div>
             <div class="mb-3">
               <label class="block text-[#00FF00] text-xs mb-1">CONTRASEÑA:</label>
               <input type="password" v-model="registerForm.password" class="modal-input" required>
+              <div v-if="errors.password" class="text-red-500 text-xs mt-1">{{ errors.password }}</div>
             </div>
             <div class="mb-3">
               <label class="block text-[#00FF00] text-xs mb-1">CONFIRMAR CONTRASEÑA:</label>
@@ -121,7 +126,6 @@ import GameLayout from '@/Components/GameLayout.vue';
 import GameTitle from '@/Components/GameTitle.vue';
 import GamePanel from '@/Components/GamePanel.vue';
 import GameButton from '@/Components/GameButton.vue';
-import axios from 'axios';
 import { router } from '@inertiajs/vue3';
 
 export default {
@@ -132,18 +136,22 @@ export default {
     GamePanel,
     GameButton
   },
+  props: {
+    auth: Object,
+    errors: Object,
+    canLogin: Boolean,
+    canRegister: Boolean
+  },
   data() {
     return {
       playerName: '',
       gameReady: false,
-      isAuthenticated: false,
-      username: '',
       showLoginModal: false,
       showRegisterModal: false,
       isLoading: false,
       loginError: '',
       registerError: '',
-      debugMode: false, // Cambiado a false para desactivar modo debug
+      debugMode: false,
       loginForm: {
         email: '',
         password: ''
@@ -157,33 +165,23 @@ export default {
     }
   },
   mounted() {
-    this.checkAuthStatus();
-    console.log('Componente montado. Debug mode:', this.debugMode);
+    console.log('Componente montado. Auth state:', this.auth);
+    console.log('Debug mode:', this.debugMode);
   },
   methods: {
     startGame() {
       console.log('Iniciando juego...');
-      router.visit('/inicio');
+      router.visit('/game');
     },
     openLoginModal() {
       this.closeModals();
       this.showLoginModal = true;
       console.log('Modal de login abierto:', this.showLoginModal);
     },
-    openLoginModalDirect() {
-      this.closeModals();
-      this.showLoginModal = true;
-      console.log('Modal de login abierto directamente:', this.showLoginModal);
-    },
     openRegisterModal() {
       this.closeModals();
       this.showRegisterModal = true;
       console.log('Modal de registro abierto:', this.showRegisterModal);
-    },
-    openRegisterModalDirect() {
-      this.closeModals();
-      this.showRegisterModal = true;
-      console.log('Modal de registro abierto directamente:', this.showRegisterModal);
     },
     closeModals() {
       this.showLoginModal = false;
@@ -192,75 +190,58 @@ export default {
       this.registerError = '';
       console.log('Modales cerrados');
     },
-    checkAuthStatus() {
-      // Comprobar si hay un token en localStorage
-      const token = localStorage.getItem('auth_token');
-      const username = localStorage.getItem('username');
-      
-      if (token && username) {
-        this.isAuthenticated = true;
-        this.username = username;
-      }
-    },
-    async login() {
+    login() {
       this.isLoading = true;
       this.loginError = '';
       
-      try {
-        const response = await axios.post('/api/login', this.loginForm);
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('username', response.data.user.name);
-        this.isAuthenticated = true;
-        this.username = response.data.user.name;
-        this.closeModals();
-      } catch (error) {
-        console.error('Error de inicio de sesión:', error);
-        this.loginError = error.response?.data?.message || 'Error al iniciar sesión';
-      } finally {
-        this.isLoading = false;
-      }
+      router.post('/login', this.loginForm, {
+        onSuccess: () => {
+          this.closeModals();
+          this.isLoading = false;
+          // La redirección automática a Welcome ya está configurada en el backend
+        },
+        onError: (errors) => {
+          this.isLoading = false;
+          if (errors.email || errors.password) {
+            // Los errores se manejan automáticamente a través de la prop errors
+          } else {
+            this.loginError = 'No se pudo iniciar sesión. Verifica tus credenciales.';
+          }
+        }
+      });
     },
-    async register() {
+    register() {
       this.isLoading = true;
       this.registerError = '';
       
-      try {
-        const response = await axios.post('/api/register', this.registerForm);
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('username', response.data.user.name);
-        this.isAuthenticated = true;
-        this.username = response.data.user.name;
-        this.closeModals();
-      } catch (error) {
-        console.error('Error de registro:', error);
-        this.registerError = error.response?.data?.message || 'Error al registrarse';
-      } finally {
-        this.isLoading = false;
-      }
+      router.post('/register', this.registerForm, {
+        onSuccess: () => {
+          this.closeModals();
+          this.isLoading = false;
+          // La redirección automática a Welcome ya está configurada en el backend
+        },
+        onError: (errors) => {
+          this.isLoading = false;
+          if (Object.keys(errors).length > 0) {
+            // Los errores se manejan automáticamente a través de la prop errors
+          } else {
+            this.registerError = 'No se pudo completar el registro.';
+          }
+        }
+      });
     },
-    async logout() {
+    logout() {
       this.isLoading = true;
       
-      try {
-        const token = localStorage.getItem('auth_token');
-        await axios.post('/api/logout', {}, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      } catch (error) {
-        console.error('Error al cerrar sesión:', error);
-      } finally {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('username');
-        this.isAuthenticated = false;
-        this.username = '';
-        this.isLoading = false;
-      }
-    },
-    showStats() {
-      console.log('Mostrando estadísticas del usuario');
-      // Implementar posteriormente
+      router.post('/logout', {}, {
+        onSuccess: () => {
+          this.isLoading = false;
+          // La redirección automática a Welcome ya está configurada en el backend
+        },
+        onError: () => {
+          this.isLoading = false;
+        }
+      });
     }
   }
 }
