@@ -279,8 +279,6 @@ export default {
       this.addBattleLog('» TODOS LOS BARCOS DESPLEGADOS');
       this.addBattleLog('» COMIENZA LA BATALLA');
       
-      // Para integración con API: Crear un nuevo juego
-      this.createGameSession();
     },
     
     handlePlayerBoardClick(row, col) {
@@ -433,36 +431,6 @@ export default {
     },
     
     // Métodos para integración futura con API
-    async createGameSession() {
-      try {
-        // En una implementación real, esto haría una llamada a la API
-        console.log('Creando sesión de juego...');
-        
-        const response = await fetch('/api/games', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            playerName: this.playerName,
-          }),
-        });
-        const data = await response.json();
-        this.gameId = data.gameId;
-        this.playerId = data.playerId;
-        this.code = data.code;
-        
-        
-        // Simulación
-        // this.gameId = 'game_' + Math.floor(Math.random() * 1000);
-        // this.playerId = 'player_' + Math.floor(Math.random() * 1000);
-        
-        // console.log(`Juego creado: ${this.gameId}`);
-      } catch (error) {
-        console.error('Error al crear el juego:', error);
-        this.connectionStatus = 'offline';
-      }
-    },
     
     async sendPlayerAction(actionType, row = null, col = null, hit = null) {
       if (this.connectionStatus === 'offline') return;
@@ -471,7 +439,7 @@ export default {
         // En una implementación real, esto haría una llamada a la API
         console.log(`Enviando acción: ${actionType} ${row},${col}`);
         
-        await fetch(`/api/games/${this.gameId}/actions`, {
+        await fetch(`/games/${this.$page.props.gameId}/actions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

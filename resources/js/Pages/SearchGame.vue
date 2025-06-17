@@ -61,6 +61,7 @@ import GameLayout from '@/Components/GameLayout.vue';
 import GameTitle from '@/Components/GameTitle.vue';
 import GamePanel from '@/Components/GamePanel.vue';
 import GameButton from '@/Components/GameButton.vue';
+import axios from 'axios';
 
 export default {
   name: 'SearchGame',
@@ -84,10 +85,18 @@ export default {
   },
   methods: {
     joinGame() {
-      if (!this.isValidGameCode) {
-        this.statusMessage = 'CÓDIGO INVÁLIDO. INTENTA DE NUEVO';
-        return;
-      }
+      
+      this.$inertia.post('/game/join', {
+        code: this.gameCode
+      })
+      .catch(error => {
+        if (!this.isValidGameCode) {
+          this.statusMessage = 'CÓDIGO INVÁLIDO. INTENTA DE NUEVO';
+          return;
+        }
+        console.error('Fallo al unirse:', error.response?.data || error.message);
+      });
+
       
       this.statusMessage = 'CONECTANDO...';
       console.log('Uniendo a la partida con código:', this.gameCode);

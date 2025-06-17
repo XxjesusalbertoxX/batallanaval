@@ -24,6 +24,8 @@ class GameController extends Controller
         $exists = PlayerGame::where('game_id', $id)
                     ->where('user_id', $userId)
                     ->exists();
+        
+        
         if (! $exists) {
             abort(403, 'No puedes ver esta partida');
         }
@@ -89,7 +91,8 @@ class GameController extends Controller
             'ready'    => false,
         ]);
 
-        return response()->json([
+
+        return Inertia::render('Index', [
             'message'    => 'Unido correctamente',
             'game_id'    => $game->id,
             'player_id'  => $user2,
@@ -104,7 +107,7 @@ class GameController extends Controller
      */
     public function setReady($id)
     {
-        $userId = Auth::id();  
+        $userId = 11?:Auth::id();  
 
         $playerGame = PlayerGame::where('game_id', $id)
             ->where('user_id', $userId)
@@ -150,12 +153,13 @@ class GameController extends Controller
 
         $mine = $players->firstWhere('user_id',Auth::id());
 
-        return Inertia::render('Game', [
-            'message'               => 'Partida iniciada',
-            'current_turn_user_id'  => $game->current_turn_user_id,
-            'my_board'              => json_decode($mine->board, true),
-          // ← aquí
+        return response()->json([
+            'status' => 'started',
+            'message' => 'Partida iniciada',
+            'current_turn_user_id' => $game->current_turn_user_id,
+            'my_board' => json_decode($mine->board, true),
         ]);
+
     }
 
     /**

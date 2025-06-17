@@ -92,7 +92,7 @@
             <GameTitle title="CREAR CUENTA" size="md" />
             <button @click="closeModals" class="modal-close">&times;</button>
           </div>
-          <form @submit.prevent="register" class="mt-5">
+          <form @submit="register" class="mt-5">
             <div class="mb-3">
               <label class="block text-[#00FF00] text-xs mb-1">NOMBRE:</label>
               <input type="text" v-model="registerForm.name" class="modal-input" required>

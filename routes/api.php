@@ -21,13 +21,5 @@ use App\Http\Controllers\GameController;
 
 Route::middleware('auth')->group(function () {
     // Route::post('/game/create', [GameController::class, 'createGame']);
-    Route::post('/game/{x}/{y}/attack', [GameController::class, 'attack']);
-    Route::get('/game/{id}/heartbeat', [GameController::class, 'heartbeat']);
-    Route::post('/game/{id}/leave', [GameController::class, 'surrender']);
-    
-    // Additional routes for game management
-    Route::post('/games/{game}/actions', [GameController::class, 'action']);
 });
 
-Route::post('/game/join', [GameController::class, 'joinGame']);
-    Route::get('/game/{id}/status', [GameController::class, 'checkGameStatus']);

@@ -115,7 +115,7 @@ export default {
     exitGame() {
       console.log('Saliendo de la búsqueda de partida...');
       // Aquí iría la lógica para salir de la partida
-      axios.post(`/api/game/${this.gameId}/exit`)
+      axios.post(`/game/${this.gameId}/exit`)
         .then(response => {
           // Redirigir al usuario a la página principal o donde corresponda
           window.location.href = '/';
@@ -125,20 +125,25 @@ export default {
         });
     },
     checkGameStatus() {
-      // Aquí iría la lógica para verificar el estado del juego
-      console.log('Verificando estado del juego...');
+    console.log('Verificando estado del juego...');
 
-      return axios.get(`/api/game/${this.gameId}/status`)
-        .then(({ data }) => {
-          this.playersState = data.players
-                    // si ya arrancó el juego, podrías redirigir o actualizar vista
-                    // if (data.status === 'started') {
-                    //   // …por ejemplo: this.$router.push(…)
+    return axios.get(`/game/${this.gameId}/status`)
+      .then(({ data }) => {
+        this.playersState = data.players
 
-                    // }
-                  })
-                  .catch(err => console.error(err))
-    }
+        if (data.status === 'started') {
+          // Redirige manualmente usando inertia
+          this.$inertia.visit(`/game/${this.gameId}/play`, {
+            data: {
+              my_board: data.my_board,
+              current_turn_user_id: data.current_turn_user_id,
+              message: data.message
+            }
+          });
+        }
+      })
+      .catch(err => console.error(err))
+  }
   },
   mounted() {
     this.checkGameStatus()

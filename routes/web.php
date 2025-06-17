@@ -28,9 +28,10 @@ Route::get('/', function () {
 
 Route::get('/index/game/{id}', [GameController::class, 'showGame'])->name('game.index');
 
-Route::get('/game', function () {
-    return Inertia::render('Game');
-})->name('game');
+Route::get('/game/{id}/play', function ($id) {
+    return Inertia::render('Game'); // this.$page.props.
+});
+
 
 Route::get('/search-game', function () {
     return Inertia::render('SearchGame');
