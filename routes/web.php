@@ -4,6 +4,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 /*
@@ -29,7 +30,17 @@ Route::get('/', function () {
 Route::get('/index/game/{id}', [GameController::class, 'showGame'])->name('game.index');
 
 Route::get('/game/{id}/play', function ($id) {
-    return Inertia::render('Game'); // this.$page.props.
+    $game = App\Models\Game::with('players')->findOrFail($id);
+    $players = $game->players;
+    $mine = $players->firstWhere('user_id', Auth::id());
+    $opponent = $players->firstWhere(fn($p) => $p->user_id !== Auth::id());
+
+    return Inertia::render('Game', [
+        'gameId' => $game->id,
+        'my_board' => json_decode($mine->board, true),
+        'enemy_board' => json_decode($opponent->board, true),
+        'current_turn_user_id' => $game->current_turn_user_id,
+    ]);
 });
 
 

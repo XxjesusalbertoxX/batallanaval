@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PlayerGame;
 use App\Models\Game;
 use App\Models\User;
+use App\Models\Move;
 use Illuminate\Support\Str;
 use App\Traits\GenerateBoard;
 
@@ -92,13 +93,8 @@ class GameController extends Controller
         ]);
 
 
-        return Inertia::render('Index', [
-            'message'    => 'Unido correctamente',
-            'game_id'    => $game->id,
-            'player_id'  => $user2,
-            'opponent'   => $game->players()->where('user_id', '!=', $user2)->with('user')->first(),
-            'status'     => $game->status,
-        ]);
+        return redirect()->route('game.index', ['id' => $game->id]);
+
     }
 
     /**
@@ -107,12 +103,13 @@ class GameController extends Controller
      */
     public function setReady($id)
     {
-        $userId = 11?:Auth::id();  
+        $userId = Auth::id();  
 
         $playerGame = PlayerGame::where('game_id', $id)
             ->where('user_id', $userId)
             ->firstOrFail();
 
+        $playerGame->last_seen_at = now();
         $playerGame->ready = true;
         $playerGame->save();
 
@@ -144,21 +141,26 @@ class GameController extends Controller
                 $playerGame->board = json_encode($this->generateRandomBoard(15));
                 $playerGame->save();
             }
+            $playerGame->last_seen_at = now();
         }
 
         if (is_null($game->current_turn_user_id)) {
             $first = $players->random();
-            $game->update(['current_turn_user_id' => $first->user_id]);
+
+            $game->update(['current_turn_user_id' => $first->user_id,
+            'status' => 'in_progres']);
         }
 
         $mine = $players->firstWhere('user_id',Auth::id());
+        $opponent = $players->firstWhere(fn($p) => $p->user_id !== Auth::id());  
 
-        return response()->json([
-            'status' => 'started',
-            'message' => 'Partida iniciada',
-            'current_turn_user_id' => $game->current_turn_user_id,
-            'my_board' => json_decode($mine->board, true),
-        ]);
+        return response()->json([  
+            'status'                 => 'started',  
+            'message'                => 'Partida iniciada',  
+            'current_turn_user_id'   => $game->current_turn_user_id,  
+            'my_board'               => json_decode($mine->board, true),  
+            'enemy_board'            => json_decode($opponent->board, true),  
+        ]);  
 
     }
 
@@ -200,10 +202,20 @@ class GameController extends Controller
         $board[$x][$y] = $current + 2;
         $opponent->board = json_encode($board);
 
-        if ($current === 1) {
+        $wasHit = $current === 1;
+
+        if ($wasHit) {
             $me->ships_sunk++;
             $opponent->ships_lost++;
         }
+
+        // Guardar movimiento en la tabla moves
+        Move::create([
+            'player_game_id' => $me->id,
+            'x' => $x,
+            'y' => $y,
+            'hit' => $wasHit,
+        ]);
 
         if (! collect($board)->flatten()->contains(1)) {
             return $this->declareVictory($me, $opponent);
@@ -306,11 +318,11 @@ class GameController extends Controller
     {
         $game = Game::with('players.user')->findOrFail($id);
 
-        if ($game->status === 'started') {
-            $userId   = Auth::id();
-            $me       = $game->players->firstWhere('user_id', $userId);
-            $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
+        $userId   = Auth::id();
+        $me       = $game->players->firstWhere('user_id', $userId);
+        $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
 
+        if (in_array($game->status, ['started', 'in_progres'])) {
             if ($opponent && $opponent->last_seen_at) {
                 $inactiveLimit = now()->subSeconds(90);
 
@@ -318,16 +330,54 @@ class GameController extends Controller
                     return $this->declareVictory($me, $opponent, $game);
                 }
             }
+        }
 
+        // 🔸 Si está en estado "sarted", ejecutar la lógica para iniciar
+        if ($game->status === 'started' && !$game->has_started) {
+            $game->update(['has_started' => true]); // SOLO UNA VEZ
             return $this->start($id);
         }
 
-        return response()->json([
-            'status'               => $game->status,
-            'players'              => $game->players,
-            'current_turn_user_id' => $game->current_turn_user_id,
-        ]);
+        if ($game->status === 'in_progres' || ($game->status === 'started' && $game->has_started)) {
+            // Preparamos las mismas variables que en start()
+            $mine     = $game->players->firstWhere('user_id', $userId);
+            $opponent = $game->players->firstWhere(fn($p) => $p->user_id !== $userId);
+
+            $lastMove = Move::where('player_game_id', $opponent->id)
+                ->latest()
+                ->first();
+
+            return response()->json([
+                'status'                => $game->status,
+                'message'               => 'Partida en curso',
+                'gameId'                => $game->id,
+                'current_turn_user_id'  => $game->current_turn_user_id,
+                'last_result'           => $lastMove?->hit ? 'hit' : 'miss',
+                'players'               => $game->players->map(function ($player) {
+                    return [
+                        'id'               => $player->user->id,
+                        'name'            => $player->user->name,
+                        'is_self'         => $player->user_id === Auth::id(),
+                        'ships_remaining' => 15 - $player->ships_lost, // Si son 15 barcos
+                        'board'           => json_decode($player->board, true),
+                    ];
+                })->values(),
+                'my_board'   => json_decode($mine->board, true),
+                'enemy_board'=> json_decode($opponent->board, true),
+            ]);
+        }
+
+        if ($game->status === 'waiting')
+        {
+                return response()->json([
+                'gameId'                => $game->id,
+                'players'               => $game->players,
+            ]);
+        }
+        // 4️⃣ Cualquier otro estado (waiting, finished, etc.)
+        
     }
+
 
 
 

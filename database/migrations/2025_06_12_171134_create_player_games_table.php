@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('result', ['win', 'lose', 'pending'])->default('pending');
             $table->unsignedTinyInteger('ships_sunk')->default(0);
             $table->unsignedTinyInteger('ships_lost')->default(0);
-            $table->date('last_seen_at')->nullable(); // Última vez que el jugador estuvo activo
+            $table->dateTime('last_seen_at')->nullable(); // Última vez que el jugador estuvo activo
             $table->boolean('ready')->default(false); // Indica si el jugador está listo
             $table->timestamps();
         });

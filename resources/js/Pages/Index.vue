@@ -92,25 +92,26 @@ export default {
   },
   computed: {
     me() {
-      return (
-        this.playersState.find(p => p.user_id === this.player.id)
-        || { user: {}, user_id: null }
-      )
+      const players = this.playersState ?? [];
+      return players.find(p => p.user_id === this.player.id) || { user: {}, user_id: null };
     },
     opponent() {
-      return (
-        this.playersState.find(p => p.user_id !== this.player.id)
-        || { user: {}, user_id: null }
-      )
+      const players = this.playersState ?? [];
+      return players.find(p => p.user_id !== this.player.id) || { user: {}, user_id: null };
     }
   },
   methods: {
     setReady() {
-      axios.post(`/game/${this.gameId}/ready`)
+      const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      axios.post(`/game/${this.gameId}/ready`, {}, {
+          headers: {
+            'X-CSRF-TOKEN': token
+          }
+        })
         .then(({ data }) => {
           console.log(data.message)
         })
-        .catch(err => console.error(err));
     },
     exitGame() {
       console.log('Saliendo de la búsqueda de partida...');
@@ -120,9 +121,6 @@ export default {
           // Redirigir al usuario a la página principal o donde corresponda
           window.location.href = '/';
         })
-        .catch(error => {
-          console.error('Error al salir del juego:', error);
-        });
     },
     checkGameStatus() {
     console.log('Verificando estado del juego...');
@@ -131,24 +129,26 @@ export default {
       .then(({ data }) => {
         this.playersState = data.players
 
-        if (data.status === 'started') {
-          // Redirige manualmente usando inertia
-          this.$inertia.visit(`/game/${this.gameId}/play`, {
-            data: {
-              my_board: data.my_board,
-              current_turn_user_id: data.current_turn_user_id,
-              message: data.message
-            }
-          });
+        if (data.status === 'started' || data.status === 'in_progres') {
+          if (data.my_board && data.enemy_board) {
+            this.$inertia.visit(`/game/${this.gameId}/play`, {
+              data: {
+                gameId: data.gameId,
+                my_board: data.my_board,
+                enemy_board: data.enemy_board,
+                current_turn_user_id: data.current_turn_user_id,
+                message: data.message
+              }
+            });
+          }
         }
       })
-      .catch(err => console.error(err))
-  }
+    }
   },
   mounted() {
     this.checkGameStatus()
 
-    this.intervalId = setInterval(this.checkGameStatus, 15000)
+    this.intervalId = setInterval(this.checkGameStatus, 3000)
 
   },
   beforeUnmount() {

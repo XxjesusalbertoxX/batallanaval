@@ -12,7 +12,7 @@ use App\Http\Controllers\GameController;
     Route::post('/game/{id}/leave', [GameController::class, 'surrender']);
     
     // Additional routes for game management
-    Route::post('/games/{game}/actions', [GameController::class, 'action']);
+    Route::post('/game/{gameId}/actions', [GameController::class, 'action']);
     Route::post('/game/join', [GameController::class, 'joinGame']);
     Route::post('/game/create', [GameController::class, 'createGame']);
     Route::post('/game/{id}/ready', [GameController::class, 'setReady']);

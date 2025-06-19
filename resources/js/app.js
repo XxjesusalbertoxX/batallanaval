@@ -5,6 +5,16 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m';
+import axios from 'axios';
+
+const token = document.querySelector('meta[name="csrf-token"]');
+
+if (token) {
+  axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+} else {
+  console.error('CSRF token not found in meta tag.');
+}
+
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
